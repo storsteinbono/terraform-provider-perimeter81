@@ -37,11 +37,13 @@ func Provider() *schema.Provider {
 
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"perimeter81_networks":         dataSourceNetworks(),
-			"perimeter81_object_addresses": dataSourceObjectAddresses(),
-			"perimeter81_object_services":  dataSourceObjectServices(),
-			"perimeter81_regions":          dataSourceRegions(),
-		},
+			// Networks
+			"perimeter81_network":  dataSourceNetwork(),
+			"perimeter81_networks": dataSourceNetworks(),
+			"perimeter81_object_address":  dataSourceObjectAddress(),
+			"perimeter81_object_service":  dataSourceObjectService(),
+			"perimeter81_regions": dataSourceRegions(),
+},
 		ConfigureContextFunc: providerConfigure,
 	}
 }

@@ -1,0 +1,60 @@
+package perimeter81
+
+import (
+	"context"
+
+	perimeter81Sdk "github.com/Perimeter81-Public/perimeter-81-client-sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func dataSourceObjectAddress() *schema.Resource {
+	return &schema.Resource{
+		ReadContext: dataSourceObjectAddressRead,
+		Schema: map[string]*schema.Schema{
+			"name":        {Type: schema.TypeString, Required: true},
+			"id":          {Type: schema.TypeString, Computed: true},
+			"description": {Type: schema.TypeString, Computed: true},
+			"value_type":  {Type: schema.TypeString, Computed: true},
+			"ip_version":  {Type: schema.TypeString, Computed: true},
+			"value": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+		},
+	}
+}
+
+func dataSourceObjectAddressRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	client := m.(*perimeter81Sdk.APIClient)
+
+	searchName := d.Get("name").(string)
+
+	resp, _, err := client.ObjectsAddressesApi.GetObjectsAddresses(ctx)
+	if err != nil {
+		return appendErrorDiags(diags, "Unable to get object addresses", err)
+	}
+
+	var foundAddress *perimeter81Sdk.ObjectsAddressObj
+	for _, address := range resp.Data {
+		if address.Name == searchName {
+			foundAddress = &address
+			break
+		}
+	}
+
+	if foundAddress == nil {
+		return diag.Errorf("Object Address '%s' not found", searchName)
+	}
+
+	d.SetId(foundAddress.Id)
+	d.Set("name", foundAddress.Name)
+	d.Set("description", foundAddress.Description)
+	d.Set("value_type", foundAddress.ValueType)
+	d.Set("ip_version", foundAddress.IpVersion)
+	d.Set("value", foundAddress.Value)
+
+	return diags
+}
